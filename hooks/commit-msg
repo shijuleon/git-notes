@@ -1,0 +1,29 @@
+#!/bin/env python3
+import os
+import datetime
+from pathlib import Path
+import notelib
+
+now = datetime.datetime.now()
+
+def create_directory():
+	year, month, day = now.strftime("%Y"), now.strftime("%m"), now.strftime("%d")
+	dir_path = Path(f'notes/{year}/{month}/{day}/')
+	if not os.path.exists(dir_path):
+		dir_path.mkdir(parents=True)
+	return dir_path
+
+def write_content(title, body, dir_path):
+	pretty_date = now.strftime("%b %d, %Y, %A, %H:%M")
+	result = f"{pretty_date}\n \n{title}\n{body}\n\n"
+	file_name = title.lower().replace(' ', '-')
+	with open(f'{dir_path}/{file_name}.md', 'a') as f:
+		f.write(result)
+
+if __name__ == '__main__':
+	content = notelib.read_from_commit_message().splitlines()
+	title, body = content[0], "\n".join(content[1:])
+
+	notelib.write_to_commit_message(title)
+	dir_path = create_directory()
+	write_content(title, body, dir_path)

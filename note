@@ -1,0 +1,45 @@
+#!/bin/env python3
+
+import datetime
+import subprocess
+import argparse
+
+INDEX_FILENAME = "notes.index"
+COMMIT_MESSAGE_PATH = '.git/COMMIT_EDITMSG'
+
+def write_to_file(path, text, mode='w'):
+	with open(path, mode) as f:	
+		f.write(text)
+
+def make_index_entry():
+  now = datetime.datetime.now()
+  year, month, day = now.strftime("%Y"), now.strftime("%b"), now.strftime("%d")
+  pretty_date = now.strftime("%b %d, %Y, %A, %H:%M:%S")
+
+  dir_path = f'notes/{year}/{month}/{day}/'
+  result = f'{pretty_date} -> {dir_path}'
+  write_to_file(INDEX_FILENAME, result, 'a')
+
+def git_commit(msg=None):
+  # This is weird. To avoid running git add & git commit
+  subprocess.run(f'git add {INDEX_FILENAME}', shell=True, check=True)
+
+  if msg:
+    subprocess.run(f"git commit -m \"{msg}\"", shell=True, check=True)
+  else:
+    try:
+      subprocess.run("git commit", shell=True, check=True)
+    except subprocess.CalledProcessError:
+      subprocess.run(f"sed -i '$d' {INDEX_FILENAME}", shell=True, check=True) # remove entry is aborted
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(description='git-notes')
+  parser.add_argument('-m', dest='message', help='Text to note down')
+  args = parser.parse_args()
+  if args.message:
+    write_to_file(COMMIT_MESSAGE_PATH, args.message)
+    make_index_entry()
+    git_commit(args.message)
+  else:
+    make_index_entry()
+    git_commit()

@@ -1,0 +1,9 @@
+#!/bin/env python3
+# Clear out default comments/template
+import notelib
+
+if __name__ == '__main__':
+  content = notelib.read_from_commit_message().splitlines()
+  if len(content) > 1:
+    if content[2].startswith("#"):
+      notelib.write_to_commit_message('')
